@@ -45,8 +45,6 @@ void LCCPreset::save(nlohmann::json& json) {
   json[section][instance_name]["delay-us"] = g_settings_get_double(settings, "delay-us");
 
   json[section][instance_name]["decay-db"] = g_settings_get_double(settings, "decay-db");
-
-  json[section][instance_name]["center-db"] = g_settings_get_double(settings, "center-db");
 }
 
 void LCCPreset::load(const nlohmann::json& json) {
@@ -56,9 +54,7 @@ void LCCPreset::load(const nlohmann::json& json) {
 
   update_key<double>(json.at(section).at(instance_name), settings, "output-gain", "output-gain");
 
-  update_key<double>(json.at(section).at(instance_name), settings, "delay-us", "delay-us");
+  update_key<float>(json.at(section).at(instance_name), settings, "delay-us", "delay-us");
 
-  update_key<double>(json.at(section).at(instance_name), settings, "decay-db", "decay-db");
-
-  update_key<double>(json.at(section).at(instance_name), settings, "center-db", "center-db");
+  update_key<float>(json.at(section).at(instance_name), settings, "decay-db", "decay-db");
 }

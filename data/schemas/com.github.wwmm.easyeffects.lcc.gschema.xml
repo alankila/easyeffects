@@ -20,9 +20,5 @@
             <range min="-6" max="0" />
             <default>-1.5</default>
         </key>
-        <key name="center-db" type="d">
-            <range min="-99" max="0" />
-            <default>-99</default>
-        </key>
     </schema>
 </schemalist>

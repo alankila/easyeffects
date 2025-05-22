@@ -60,7 +60,7 @@ struct _LCCBox {
   GtkLabel *input_level_left_label, *input_level_right_label, *output_level_left_label, *output_level_right_label,
       *plugin_credit;
 
-  GtkSpinButton *delay_us, *decay_db, *center_db;
+  GtkSpinButton *delay_us, *decay_db;
 
   GSettings* settings;
 
@@ -125,7 +125,6 @@ void setup(LCCBox* self, std::shared_ptr<LCC> lcc, const std::string& schema_pat
 
   g_settings_bind(self->settings, "delay-us", gtk_spin_button_get_adjustment(self->delay_us), "value", G_SETTINGS_BIND_DEFAULT);
   g_settings_bind(self->settings, "decay-db", gtk_spin_button_get_adjustment(self->decay_db), "value", G_SETTINGS_BIND_DEFAULT);
-  g_settings_bind(self->settings, "center-db", gtk_spin_button_get_adjustment(self->center_db), "value", G_SETTINGS_BIND_DEFAULT);
 }
 
 void dispose(GObject* object) {
@@ -184,7 +183,6 @@ void lcc_box_class_init(LCCBoxClass* klass) {
 
   gtk_widget_class_bind_template_child(widget_class, LCCBox, delay_us);
   gtk_widget_class_bind_template_child(widget_class, LCCBox, decay_db);
-  gtk_widget_class_bind_template_child(widget_class, LCCBox, center_db);
 
   gtk_widget_class_bind_template_callback(widget_class, on_reset);
 }
@@ -195,7 +193,7 @@ void lcc_box_init(LCCBox* self) {
   self->data = new Data();
 
   prepare_spinbuttons<"us">(self->delay_us);
-  prepare_spinbuttons<"dB">(self->decay_db, self->center_db);
+  prepare_spinbuttons<"dB">(self->decay_db);
 
   prepare_scales<"dB">(self->input_gain, self->output_gain);
 }

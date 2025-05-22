@@ -47,15 +47,14 @@ class LCC : public PluginBase {
 
   auto get_latency_seconds() -> float override;
 
-  double delay_us = 360;
-  double decay_db = -1.5;
-  double center_db = -99;
+  float delay_us = 360;
+  float decay_db = -1.5;
 
  private:
-  double delay_samples = 0;
+  float delay_samples = 0;
 
   std::vector<float> data;
-  unsigned int data_index = 0;
+  size_t data_index = 0;
 
   float lowpass_coeff = 0;
   float left_lowpass_state = 0;
