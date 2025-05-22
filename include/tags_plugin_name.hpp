@@ -87,6 +87,8 @@ inline constexpr auto filter = "filter";
 
 inline constexpr auto gate = "gate";
 
+inline constexpr auto lcc = "lcc";
+
 inline constexpr auto level_meter = "level_meter";
 
 inline constexpr auto limiter = "limiter";
@@ -110,10 +112,10 @@ inline constexpr auto rnnoise = "rnnoise";
 inline constexpr auto stereo_tools = "stereo_tools";
 
 inline constexpr auto list = std::to_array(
-    {autogain,       bass_enhancer, bass_loudness, compressor,     convolver, crossfeed,   crystalizer,
-     deesser,        delay,         deepfilternet, echo_canceller, equalizer, exciter,     expander,
-     filter,         gate,          level_meter,   limiter,        loudness,  maximizer,   multiband_compressor,
-     multiband_gate, pitch,         reverb,        rnnoise,        speex,     stereo_tools});
+    {autogain,             bass_enhancer,  bass_loudness, compressor,     convolver, crossfeed, crystalizer,
+     deesser,              delay,          deepfilternet, echo_canceller, equalizer, exciter,   expander,
+     filter,               gate,           lcc,           level_meter,    limiter,   loudness,  maximizer,
+     multiband_compressor, multiband_gate, pitch,         reverb,         rnnoise,   speex,     stereo_tools});
 
 auto get_translated() -> std::map<std::string, std::string>;
 

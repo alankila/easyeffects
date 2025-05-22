@@ -53,6 +53,7 @@
 #include "expander_preset.hpp"
 #include "filter_preset.hpp"
 #include "gate_preset.hpp"
+#include "lcc_preset.hpp"
 #include "level_meter_preset.hpp"
 #include "limiter_preset.hpp"
 #include "loudness_preset.hpp"
@@ -1268,6 +1269,10 @@ auto PresetsManager::create_wrapper(const PresetType& preset_type, std::string_v
 
   if (filter_name.starts_with(tags::plugin_name::gate)) {
     return std::make_unique<GatePreset>(preset_type, instance_id);
+  }
+
+  if (filter_name.starts_with(tags::plugin_name::lcc)) {
+    return std::make_unique<LCCPreset>(preset_type, instance_id);
   }
 
   if (filter_name.starts_with(tags::plugin_name::level_meter)) {

@@ -51,6 +51,7 @@ auto get_translated() -> std::map<std::string, std::string> {
                                                    {expander, _("Expander")},
                                                    {filter, _("Filter")},
                                                    {gate, _("Gate")},
+						   {lcc, _("Crosstalk Canceller")},
                                                    {level_meter, _("Level Meter")},
                                                    {limiter, _("Limiter")},
                                                    {loudness, _("Loudness")},
@@ -129,6 +130,10 @@ auto get_base_name(std::string_view name) -> std::string {
 
   if (name.starts_with(tags::plugin_name::gate)) {
     return tags::plugin_name::gate;
+  }
+
+  if (name.starts_with(tags::plugin_name::lcc)) {
+    return tags::plugin_name::lcc;
   }
 
   if (name.starts_with(tags::plugin_name::level_meter)) {

@@ -71,6 +71,8 @@
 #include "filter_ui.hpp"
 #include "gate.hpp"
 #include "gate_ui.hpp"
+#include "lcc.hpp"
+#include "lcc_ui.hpp"
 #include "level_meter.hpp"
 #include "level_meter_ui.hpp"
 #include "limiter.hpp"
@@ -391,6 +393,14 @@ void add_plugins_to_stack(PluginsBox* self) {
       }
 
       gtk_stack_add_named(self->stack, box, name.c_str());
+    } else if (name.starts_with(tags::plugin_name::lcc)) {
+      auto plugin_ptr = effects_base->get_plugin_instance<LCC>(name);
+
+      auto* box = ui::lcc_box::create();
+
+      ui::lcc_box::setup(box, plugin_ptr, path);
+
+      gtk_stack_add_named(self->stack, GTK_WIDGET(box), name.c_str());
     } else if (GtkWidget* box = nullptr; name.starts_with(tags::plugin_name::level_meter)) {
       auto plugin_ptr = effects_base->get_plugin_instance<LevelMeter>(name);
 
