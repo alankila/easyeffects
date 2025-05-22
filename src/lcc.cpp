@@ -36,7 +36,7 @@
  * Any high frequency localization forces listening with head locked in a vice
  * due to wavelength. These will require much experimentation and possibly precisely
  * designed better filter shape than this rough stab. */
-const auto ILD_HIGHPASS_HZ = 400.0f;
+const auto ILD_HIGHPASS_HZ = 300.0f;
 const auto ILD_LOWPASS_HZ = 2000.0f;
 
 LCC::LCC(const std::string& tag,
