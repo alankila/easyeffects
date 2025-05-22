@@ -43,6 +43,7 @@
 #include "expander.hpp"
 #include "filter.hpp"
 #include "gate.hpp"
+#include "lcc.hpp"
 #include "level_meter.hpp"
 #include "limiter.hpp"
 #include "loudness.hpp"
@@ -220,6 +221,8 @@ void EffectsBase::create_filters_if_necessary() {
       filter = std::make_shared<Filter>(log_tag, tags::schema::filter::id, path, pm, pipeline_type);
     } else if (name.starts_with(tags::plugin_name::gate)) {
       filter = std::make_shared<Gate>(log_tag, tags::schema::gate::id, path, pm, pipeline_type);
+    } else if (name.starts_with(tags::plugin_name::lcc)) {
+      filter = std::make_shared<LCC>(log_tag, tags::schema::lcc::id, path, pm, pipeline_type);
     } else if (name.starts_with(tags::plugin_name::level_meter)) {
       filter = std::make_shared<LevelMeter>(log_tag, tags::schema::level_meter::id, path, pm, pipeline_type);
     } else if (name.starts_with(tags::plugin_name::limiter)) {

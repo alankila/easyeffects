@@ -189,6 +189,16 @@ inline constexpr auto output_path = "/com/github/wwmm/easyeffects/streamoutputs/
 
 }  // namespace tags::schema::gate
 
+namespace tags::schema::lcc {
+
+inline constexpr auto id = "com.github.wwmm.easyeffects.lcc";
+
+inline constexpr auto input_path = "/com/github/wwmm/easyeffects/streaminputs/lcc/";
+
+inline constexpr auto output_path = "/com/github/wwmm/easyeffects/streamoutputs/lcc/";
+
+}  // namespace tags::schema::lcc
+
 namespace tags::schema::level_meter {
 
 inline constexpr auto id = "com.github.wwmm.easyeffects.levelmeter";
