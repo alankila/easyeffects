@@ -33,6 +33,9 @@ class FilterState {
   float lowpass_coeff = 0;
   float lowpass_state = 0;
 
+  float highpass_coeff = 0;
+  float highpass_state = 0;
+
  public:
   /**
    * Configure internal delay line length
@@ -84,6 +87,26 @@ class FilterState {
   float lowpass(float sample) {
     lowpass_state = lowpass_state * lowpass_coeff + sample * (1 - lowpass_coeff);
     return lowpass_state;
+  }
+
+  /**
+   * Configure highpass filter
+   *
+   * @param f the fractional sample rate (fs = 1)
+   */
+  void set_highpass(float f) {
+    highpass_coeff = static_cast<float>(std::exp(-2 * M_PI * f));
+  }
+
+  /**
+   * Perform highpass filtering and return the sample
+   * 
+   * @param sample the sample to input
+   * @return highpassed sample
+   */
+  float highpass(float sample) {
+    highpass_state = highpass_state * highpass_coeff + sample * (1 - highpass_coeff);
+    return sample - highpass_state;
   }
 };
 

@@ -37,6 +37,8 @@
  * due to wavelength. These will require much experimentation and possibly precisely
  * designed better filter shape than this rough stab. */
 const auto ILD_LOWPASS_HZ = 1600.0f;
+/* low frequency limit */
+const auto LOW_FREQ_LIMIT_HZ = 100.0f;
 
 LCC::LCC(const std::string& tag,
          const std::string& schema,
@@ -85,6 +87,9 @@ void LCC::setup() {
 
   a.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
   b.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
+
+  a.set_highpass(LOW_FREQ_LIMIT_HZ / static_cast<float>(rate));
+  b.set_highpass(LOW_FREQ_LIMIT_HZ / static_cast<float>(rate));
 }
 
 /* Perform stereo crossfeed that cancels contralateral audio. */
@@ -115,6 +120,7 @@ void LCC::process(std::span<float>& left_in,
       right_out[n] = (mo - side) * .5f;
 
       mo = a.lowpass(mo);
+      mo = a.highpass(mo);
       a.put_sample(mo);
     }
   } else {
@@ -128,7 +134,10 @@ void LCC::process(std::span<float>& left_in,
        * Literature suggests that head shadow is at most about -10 dB. */
       ao = a.lowpass(ao);
       bo = b.lowpass(bo);
-      
+
+      ao = a.highpass(ao);
+      bo = b.highpass(bo);
+
       a.put_sample(ao);
       b.put_sample(bo);
     }
