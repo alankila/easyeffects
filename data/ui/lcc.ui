@@ -23,17 +23,23 @@
                                 <child>
                                     <object class="AdwPreferencesGroup">
                                         <child>
+                                            <object class="GtkCheckButton" id="phantom_center_only">
+                                                <property name="valign">center</property>
+                                                <property name="label" translatable="yes">Process only phantom center</property>
+                                            </object>
+                                        </child>
+                                        <child>
                                             <object class="AdwActionRow">
                                                 <property name="title" translatable="yes">Delay</property>
                                                 <child>
                                                     <object class="GtkSpinButton" id="delay_us">
                                                         <property name="valign">center</property>
-                                                        <property name="width-chars">10</property>
+                                                        <property name="width-chars">6</property>
                                                         <property name="digits">0</property>
                                                         <property name="adjustment">
                                                             <object class="GtkAdjustment">
-                                                                <property name="lower">20</property>
-                                                                <property name="upper">700</property>
+                                                                <property name="lower">200</property>
+                                                                <property name="upper">500</property>
                                                                 <property name="value">330</property>
                                                                 <property name="step-increment">1</property>
                                                                 <property name="page-increment">10</property>
@@ -50,7 +56,7 @@
                                                 <child>
                                                     <object class="GtkSpinButton" id="decay_db">
                                                         <property name="valign">center</property>
-                                                        <property name="width-chars">10</property>
+                                                        <property name="width-chars">6</property>
                                                         <property name="digits">1</property>
                                                         <property name="adjustment">
                                                             <object class="GtkAdjustment">

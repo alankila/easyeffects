@@ -60,6 +60,8 @@ struct _LCCBox {
   GtkLabel *input_level_left_label, *input_level_right_label, *output_level_left_label, *output_level_right_label,
       *plugin_credit;
 
+  GtkToggleButton *phantom_center_only;
+
   GtkSpinButton *delay_us, *decay_db;
 
   GSettings* settings;
@@ -123,6 +125,7 @@ void setup(LCCBox* self, std::shared_ptr<LCC> lcc, const std::string& schema_pat
 
   gsettings_bind_widgets<"input-gain", "output-gain">(self->settings, self->input_gain, self->output_gain);
 
+  g_settings_bind(self->settings, "phantom-center-only", self->phantom_center_only, "active", G_SETTINGS_BIND_DEFAULT);
   g_settings_bind(self->settings, "delay-us", gtk_spin_button_get_adjustment(self->delay_us), "value", G_SETTINGS_BIND_DEFAULT);
   g_settings_bind(self->settings, "decay-db", gtk_spin_button_get_adjustment(self->decay_db), "value", G_SETTINGS_BIND_DEFAULT);
 }
@@ -181,6 +184,7 @@ void lcc_box_class_init(LCCBoxClass* klass) {
   gtk_widget_class_bind_template_child(widget_class, LCCBox, output_level_right_label);
   gtk_widget_class_bind_template_child(widget_class, LCCBox, plugin_credit);
 
+  gtk_widget_class_bind_template_child(widget_class, LCCBox, phantom_center_only);
   gtk_widget_class_bind_template_child(widget_class, LCCBox, delay_us);
   gtk_widget_class_bind_template_child(widget_class, LCCBox, decay_db);
 

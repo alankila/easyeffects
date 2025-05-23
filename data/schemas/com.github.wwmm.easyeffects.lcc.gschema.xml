@@ -4,6 +4,9 @@
         <key name="bypass" type="b">
             <default>false</default>
         </key>
+        <key name="phantom-center-only" type="b">
+            <default>false</default>
+        </key>
         <key name="input-gain" type="d">
             <range min="-36" max="36" />
             <default>0</default>
@@ -13,7 +16,7 @@
             <default>0</default>
         </key>
         <key name="delay-us" type="d">
-            <range min="30" max="700" />
+            <range min="200" max="500" />
             <default>330</default>
         </key>
         <key name="decay-db" type="d">

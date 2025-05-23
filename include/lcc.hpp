@@ -132,6 +132,7 @@ class LCC : public PluginBase {
 
   auto get_latency_seconds() -> float override;
 
+  bool phantom_center_only = false;
   float delay_us = 330;
   float decay_db = -2;
 

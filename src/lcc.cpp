@@ -46,6 +46,12 @@ LCC::LCC(const std::string& tag,
          PipeManager* pipe_manager,
          PipelineType pipe_type)
     : PluginBase(tag, tags::plugin_name::lcc, tags::plugin_package::ee, schema, schema_path, pipe_manager, pipe_type) {
+  gconnections.push_back(g_signal_connect(settings, "changed::phantom-center-only",
+                                          G_CALLBACK(+[](GSettings* settings, char* key, gpointer user_data) {
+                                            auto* self = static_cast<LCC*>(user_data);
+                                            self->phantom_center_only = g_settings_get_boolean(settings, key);
+                                          }),
+                                          this));
   gconnections.push_back(g_signal_connect(settings, "changed::delay-us",
                                           G_CALLBACK(+[](GSettings* settings, char* key, gpointer user_data) {
                                             auto* self = static_cast<LCC*>(user_data);
@@ -105,22 +111,37 @@ void LCC::process(std::span<float>& left_in,
 
   auto decay_gain = static_cast<float>(std::pow(10, decay_db / 20));
   auto ild_lowpass_limit = static_cast<float>(std::pow(10, ILD_LOWPASS_LIMIT_DB / 20));
-  for (size_t n = 0U; n < left_in.size(); n ++) {
-    auto ao = left_in[n] - decay_gain * b.get_sample();
-    auto bo = right_in[n] - decay_gain * a.get_sample();
-    left_out[n] = ao;
-    right_out[n] = bo;
 
-    ao = a.highpass(ao);
-    bo = b.highpass(bo);
+  if (phantom_center_only) {
+    for (size_t n = 0U; n < left_in.size(); n ++) {
+      float middle = left_in[n] + right_in[n];
+      float side = left_in[n] - right_in[n];
+      auto mo = middle - decay_gain * a.get_sample();
+      left_out[n] = (mo + side) * .5f;
+      right_out[n] = (mo - side) * .5f;
 
-    /* Lowpass with a maximum negative gain.
-     * Literature suggests that head shadow is at most about -10 dB. */
-    ao = a.lowpass(ao) * (1 - ild_lowpass_limit) + ao * ild_lowpass_limit;
-    bo = b.lowpass(bo) * (1 - ild_lowpass_limit) + bo * ild_lowpass_limit;
+      mo = a.highpass(mo);
+      mo = a.lowpass(mo) * (1 - ild_lowpass_limit) + mo * ild_lowpass_limit;
+      a.put_sample(mo);
+    }
+  } else {
+    for (size_t n = 0U; n < left_in.size(); n ++) {
+      auto ao = left_in[n] - decay_gain * b.get_sample();
+      auto bo = right_in[n] - decay_gain * a.get_sample();
+      left_out[n] = ao;
+      right_out[n] = bo;
 
-    a.put_sample(ao);
-    b.put_sample(bo);
+      ao = a.highpass(ao);
+      bo = b.highpass(bo);
+
+      /* Lowpass with a maximum negative gain.
+       * Literature suggests that head shadow is at most about -10 dB. */
+      ao = a.lowpass(ao) * (1 - ild_lowpass_limit) + ao * ild_lowpass_limit;
+      bo = b.lowpass(bo) * (1 - ild_lowpass_limit) + bo * ild_lowpass_limit;
+
+      a.put_sample(ao);
+      b.put_sample(bo);
+    }
   }
 
   if (output_gain != 1.0F) {

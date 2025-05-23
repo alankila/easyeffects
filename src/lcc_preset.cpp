@@ -42,6 +42,8 @@ void LCCPreset::save(nlohmann::json& json) {
 
   json[section][instance_name]["output-gain"] = g_settings_get_double(settings, "output-gain");
 
+  json[section][instance_name]["phantom-center-only"] = g_settings_get_boolean(settings, "phantom-center-only") != 0;
+
   json[section][instance_name]["delay-us"] = g_settings_get_double(settings, "delay-us");
 
   json[section][instance_name]["decay-db"] = g_settings_get_double(settings, "decay-db");
@@ -53,6 +55,8 @@ void LCCPreset::load(const nlohmann::json& json) {
   update_key<double>(json.at(section).at(instance_name), settings, "input-gain", "input-gain");
 
   update_key<double>(json.at(section).at(instance_name), settings, "output-gain", "output-gain");
+
+  update_key<bool>(json.at(section).at(instance_name), settings, "phantom-center-only", "phantom-center-only");
 
   update_key<float>(json.at(section).at(instance_name), settings, "delay-us", "delay-us");
 
