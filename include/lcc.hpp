@@ -132,8 +132,8 @@ class LCC : public PluginBase {
 
   auto get_latency_seconds() -> float override;
 
-  float delay_us = 360;
-  float decay_db = -1.5;
+  float delay_us = 330;
+  float decay_db = -2;
 
  private:
   FilterState a;

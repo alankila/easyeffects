@@ -37,6 +37,7 @@
  * due to wavelength. These will require much experimentation and possibly precisely
  * designed better filter shape than this rough stab. */
 const auto ILD_HIGHPASS_HZ = 300.0f;
+const auto ILD_LOWPASS_LIMIT_DB = -10.0f;
 const auto ILD_LOWPASS_HZ = 3000.0f;
 
 LCC::LCC(const std::string& tag,
@@ -103,11 +104,23 @@ void LCC::process(std::span<float>& left_in,
   }
 
   auto decay_gain = static_cast<float>(std::pow(10, decay_db / 20));
+  auto ild_lowpass_limit = static_cast<float>(std::pow(10, ILD_LOWPASS_LIMIT_DB / 20));
   for (size_t n = 0U; n < left_in.size(); n ++) {
-    left_out[n] = left_in[n] - decay_gain * b.get_sample();
-    right_out[n] = right_in[n] - decay_gain * a.get_sample();
-    a.put_sample(a.lowpass(a.highpass(left_out[n])));
-    b.put_sample(b.lowpass(b.highpass(right_out[n])));
+    auto ao = left_in[n] - decay_gain * b.get_sample();
+    auto bo = right_in[n] - decay_gain * a.get_sample();
+    left_out[n] = ao;
+    right_out[n] = bo;
+
+    ao = a.highpass(ao);
+    bo = b.highpass(bo);
+
+    /* Lowpass with a maximum negative gain.
+     * Literature suggests that head shadow is at most about -10 dB. */
+    ao = a.lowpass(ao) * (1 - ild_lowpass_limit) + ao * ild_lowpass_limit;
+    bo = b.lowpass(bo) * (1 - ild_lowpass_limit) + bo * ild_lowpass_limit;
+
+    a.put_sample(ao);
+    b.put_sample(bo);
   }
 
   if (output_gain != 1.0F) {
