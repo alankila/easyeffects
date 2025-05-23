@@ -17,11 +17,11 @@
         </key>
         <key name="delay-us" type="d">
             <range min="200" max="500" />
-            <default>330</default>
+            <default>310</default>
         </key>
         <key name="decay-db" type="d">
             <range min="-6" max="0" />
-            <default>-2</default>
+            <default>-4</default>
         </key>
     </schema>
 </schemalist>

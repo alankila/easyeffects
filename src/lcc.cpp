@@ -36,9 +36,7 @@
  * Any high frequency localization forces listening with head locked in a vice
  * due to wavelength. These will require much experimentation and possibly precisely
  * designed better filter shape than this rough stab. */
-const auto ILD_HIGHPASS_HZ = 300.0f;
-const auto ILD_LOWPASS_LIMIT_DB = -10.0f;
-const auto ILD_LOWPASS_HZ = 3000.0f;
+const auto ILD_LOWPASS_HZ = 1600.0f;
 
 LCC::LCC(const std::string& tag,
          const std::string& schema,
@@ -87,9 +85,6 @@ void LCC::setup() {
 
   a.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
   b.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
-
-  a.set_highpass(ILD_HIGHPASS_HZ / static_cast<float>(rate));
-  b.set_highpass(ILD_HIGHPASS_HZ / static_cast<float>(rate));
 }
 
 /* Perform stereo crossfeed that cancels contralateral audio. */
@@ -110,7 +105,6 @@ void LCC::process(std::span<float>& left_in,
   }
 
   auto decay_gain = static_cast<float>(std::pow(10, decay_db / 20));
-  auto ild_lowpass_limit = static_cast<float>(std::pow(10, ILD_LOWPASS_LIMIT_DB / 20));
 
   if (phantom_center_only) {
     for (size_t n = 0U; n < left_in.size(); n ++) {
@@ -120,8 +114,7 @@ void LCC::process(std::span<float>& left_in,
       left_out[n] = (mo + side) * .5f;
       right_out[n] = (mo - side) * .5f;
 
-      mo = a.highpass(mo);
-      mo = a.lowpass(mo) * (1 - ild_lowpass_limit) + mo * ild_lowpass_limit;
+      mo = a.lowpass(mo);
       a.put_sample(mo);
     }
   } else {
@@ -131,14 +124,11 @@ void LCC::process(std::span<float>& left_in,
       left_out[n] = ao;
       right_out[n] = bo;
 
-      ao = a.highpass(ao);
-      bo = b.highpass(bo);
-
       /* Lowpass with a maximum negative gain.
        * Literature suggests that head shadow is at most about -10 dB. */
-      ao = a.lowpass(ao) * (1 - ild_lowpass_limit) + ao * ild_lowpass_limit;
-      bo = b.lowpass(bo) * (1 - ild_lowpass_limit) + bo * ild_lowpass_limit;
-
+      ao = a.lowpass(ao);
+      bo = b.lowpass(bo);
+      
       a.put_sample(ao);
       b.put_sample(bo);
     }
