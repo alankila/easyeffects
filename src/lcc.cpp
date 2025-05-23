@@ -104,8 +104,8 @@ void LCC::process(std::span<float>& left_in,
 
   auto decay_gain = static_cast<float>(std::pow(10, decay_db / 20));
   for (size_t n = 0U; n < left_in.size(); n ++) {
-    left_out[n] = left_in[n] - decay_gain * a.get_sample();
-    right_out[n] = right_in[n] - decay_gain * b.get_sample();
+    left_out[n] = left_in[n] - decay_gain * b.get_sample();
+    right_out[n] = right_in[n] - decay_gain * a.get_sample();
     a.put_sample(a.lowpass(a.highpass(left_out[n])));
     b.put_sample(b.lowpass(b.highpass(right_out[n])));
   }
