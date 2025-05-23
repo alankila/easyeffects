@@ -38,7 +38,7 @@
  * designed better filter shape than this rough stab. */
 const auto ILD_LOWPASS_HZ = 1600.0f;
 /* low frequency limit */
-const auto LOW_FREQ_LIMIT_HZ = 100.0f;
+const auto LOW_FREQ_LIMIT_HZ = 200.0f;
 
 LCC::LCC(const std::string& tag,
          const std::string& schema,
@@ -130,8 +130,6 @@ void LCC::process(std::span<float>& left_in,
       left_out[n] = ao;
       right_out[n] = bo;
 
-      /* Lowpass with a maximum negative gain.
-       * Literature suggests that head shadow is at most about -10 dB. */
       ao = a.lowpass(ao);
       bo = b.lowpass(bo);
 
