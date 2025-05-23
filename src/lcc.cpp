@@ -37,7 +37,7 @@
  * due to wavelength. These will require much experimentation and possibly precisely
  * designed better filter shape than this rough stab. */
 const auto ILD_HIGHPASS_HZ = 300.0f;
-const auto ILD_LOWPASS_HZ = 2000.0f;
+const auto ILD_LOWPASS_HZ = 3000.0f;
 
 LCC::LCC(const std::string& tag,
          const std::string& schema,
@@ -73,20 +73,16 @@ LCC::~LCC() {
 void LCC::setup() {
   std::scoped_lock<std::mutex> lock(data_mutex);
 
-  /* Compute required buffer size for the stereo delay line. */
-  delay_samples = static_cast<float>(this->delay_us / 1.0e6 * rate);
-  if (auto required_size = 2U * static_cast<size_t>(std::ceil(delay_samples)); data.size() != required_size) {
-    data.resize(required_size);
-    data_index = 0;
-  }
+  /* The required buffer size for the stereo delay line. */
+  auto samples = static_cast<size_t>(std::round(delay_us / 1.0e6 * rate));
+  a.set_delay_length(samples);
+  b.set_delay_length(samples);
 
-  lowpass_coeff = static_cast<float>(std::exp(-2 * M_PI * ILD_LOWPASS_HZ / rate));
-  left_lowpass_state = 0;
-  right_lowpass_state = 0;
+  a.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
+  b.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
 
-  highpass_coeff = static_cast<float>(std::exp(-2 * M_PI * ILD_HIGHPASS_HZ / rate));
-  right_highpass_state = 0;
-  left_highpass_state = 0;
+  a.set_highpass(ILD_HIGHPASS_HZ / static_cast<float>(rate));
+  b.set_highpass(ILD_HIGHPASS_HZ / static_cast<float>(rate));
 }
 
 /* Perform stereo crossfeed that cancels contralateral audio. */
@@ -107,38 +103,11 @@ void LCC::process(std::span<float>& left_in,
   }
 
   auto decay_gain = static_cast<float>(std::pow(10, decay_db / 20));
-  auto full_samples = static_cast<size_t>(std::ceil(delay_samples));
-  auto fract = static_cast<float>(full_samples) - delay_samples;
-
   for (size_t n = 0U; n < left_in.size(); n ++) {
-    auto next_data_index = (data_index + 1) % full_samples;
-
-    /* note: +1, we select the right delay line for left and vice versa. */
-    auto left =
-        left_in[n] - decay_gain * (data[data_index * 2 + 1] * (1 - fract) + data[next_data_index * 2 + 1] * fract);
-    auto right =
-        right_in[n] - decay_gain * (data[data_index * 2 + 0] * (1 - fract) + data[next_data_index * 2 + 0] * fract);
-
-    /* head shadow is modeled by a crude 1st order filter. */
-    left_lowpass_state = left_lowpass_state * lowpass_coeff + left * (1 - lowpass_coeff);
-    right_lowpass_state = right_lowpass_state * lowpass_coeff + right * (1 - lowpass_coeff);
-
-    /* highpass is for not canceling the bass */
-    left_highpass_state = left_highpass_state * highpass_coeff + left_lowpass_state * (1 - highpass_coeff);
-    right_highpass_state = right_highpass_state * highpass_coeff + right_lowpass_state * (1 - highpass_coeff);
-
-    /* The lowpass state is input to the highpass filter. The highpass output is the difference between
-     * the filter's input and its output (state). It is a lagging filter, and proper sign is
-     * maintained by subtracting input - state.
-     */
-    data[data_index * 2 + 0] = left_lowpass_state - left_highpass_state;
-    data[data_index * 2 + 1] = right_lowpass_state - right_highpass_state;
-
-    data_index = next_data_index;
-
-    /* actual output is the original sound - delay line's feedback */
-    left_out[n] = left;
-    right_out[n] = right;
+    left_out[n] = left_in[n] - decay_gain * a.get_sample();
+    right_out[n] = right_in[n] - decay_gain * b.get_sample();
+    a.put_sample(a.lowpass(a.highpass(left_out[n])));
+    b.put_sample(b.lowpass(b.highpass(right_out[n])));
   }
 
   if (output_gain != 1.0F) {
