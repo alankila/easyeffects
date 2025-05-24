@@ -31,16 +31,16 @@
  */
 class Biquad {
  private:
-  float fa1;
-  float fa2;
-  float fb0;
-  float fb1;
-  float fb2;
+  float fa1 = 0;
+  float fa2 = 0;
+  float fb0 = 0;
+  float fb1 = 0;
+  float fb2 = 0;
 
-  float x1;
-  float x2;
-  float y1;
-  float y2;
+  float x1 = 0;
+  float x2 = 0;
+  float y1 = 0;
+  float y2 = 0;
 
   void set_coefficients(double a0, double a1, double a2, double b0, double b1, double b2) {
     fa1 = static_cast<float>(a1/a0);
@@ -133,7 +133,7 @@ class FilterState {
      * and it would be unstable.
      */
     highpass.set_high_pass(140, rate, 0.707);
-    shelf.set_high_shelf(650, rate, -6.0, 0.707);
+    shelf.set_high_shelf(600, rate, -5.0, 1);
     lowpass.set_low_pass(3700, rate, 0.707);
   }
 
