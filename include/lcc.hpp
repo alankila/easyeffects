@@ -127,8 +127,6 @@ class FilterState {
   Biquad f3;
   Biquad f4;
   Biquad f5;
-  Biquad f6;
-  Biquad f7;
 
  public:
   /**
@@ -145,24 +143,20 @@ class FilterState {
      * Standard kemar head fixture, digitized
      * from picture at https://www.intechopen.com/chapters/45612
      *
-     * REW fit is made with fixed gain of -2 dB.
+     * The contralateral HRTF is what is perceived of the sound traversing around the head,
+     * but the correction audio is received with sensitivity of the ipsilateral HRTF. Thus,
+     * the magnitudes required must be subtracted: contra - ipsi, and an equalization must
+     * reproduce that shape.
      *
-     * 1 True Manual HP_Q 140.0 0.00 0.710 
-     * 2 True Auto PK 788.0 -2.80 1.467 537.2 
-     * 3 True Auto PK 1034 -5.90 4.389 235.6 
-     * 4 True Auto PK 1287 -3.00 4.999 257.5 
-     * 5 True Auto PK 2195 -6.80 3.125 702.4 
-     * 6 True Manual LP_Q 3000 0.00 1.00 
-     * 7 True Auto PK 3567 -5.40 2.950 1209 
+     * This EQ was fitted in REW and assumed fixed pregain -2 dB. In REW, it is easier to
+     * calculate ipsi / contra magnitude spectrum measurement, and then let REW optimize
+     * it to flat +2 dB target.
      */
-
     f1.set_high_pass(140, rate, 0.710);
-    f2.set_peaking_band(788, rate, -2.8, 1.467);
-    f3.set_peaking_band(1034, rate, -5.9, 4.389);
-    f4.set_peaking_band(1287, rate, -3, 4.999);
-    f5.set_peaking_band(2195, rate, -6.8, 3.125);
-    f6.set_low_pass(3000, rate, 1.0);
-    f7.set_peaking_band(3567, rate, -5.4, 2.950);
+    f2.set_peaking_band(1042, rate, -7.4, 1.798);
+    f3.set_peaking_band(2221, rate, -6.2, 3.140);
+    f4.set_low_pass(3000, rate, 1.0);
+    f5.set_peaking_band(3702, rate, -5.4, 3.108);
   }
 
   /**
@@ -186,8 +180,6 @@ class FilterState {
     sample = f3.process(sample);
     sample = f4.process(sample);
     sample = f5.process(sample);
-    sample = f6.process(sample);
-    sample = f7.process(sample);
     data[data_index] = sample;
     data_index = (data_index + 1) % data.size();
   }
