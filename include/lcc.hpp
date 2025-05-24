@@ -1,5 +1,5 @@
 /*
- *  Copyright © 2017-2024 Wellington Wallace
+ *  Copyright © 2017-2024 Antti S. Lankila  <alankila@bel.fi>
  *
  *  This file is part of Easy Effects.
  *
@@ -25,28 +25,116 @@
 #include "pipe_manager.hpp"
 #include "plugin_base.hpp"
 
+/**
+ * Some standard filters from "Cookbook formulae for audio EQ biquad filter coefficients"
+ * by Robert Bristow-Johnson  <rbj@audioimagination.com>, adapted for EasyEffects.
+ */
+class Biquad {
+ private:
+  float fa1;
+  float fa2;
+  float fb0;
+  float fb1;
+  float fb2;
+
+  float x1;
+  float x2;
+  float y1;
+  float y2;
+
+  void set_coefficients(double a0, double a1, double a2, double b0, double b1, double b2) {
+    fa1 = static_cast<float>(a1/a0);
+    fa2 = static_cast<float>(a2/a0);
+    fb0 = static_cast<float>(b0/a0);
+    fb1 = static_cast<float>(b1/a0);
+    fb2 = static_cast<float>(b2/a0);
+  }
+
+ public:
+  void set_low_pass(double center_frequency, double sampling_frequency, double quality) {
+    auto w0 = 2 * M_PI * center_frequency / sampling_frequency;
+    auto alpha = std::sin(w0) / (2 * quality);
+
+    auto b0 = (1 - std::cos(w0))/2;
+    auto b1 =  1 - std::cos(w0);
+    auto b2 = (1 - std::cos(w0))/2;
+    auto a0 =  1 + alpha;
+    auto a1 = -2 * std::cos(w0);
+    auto a2 =  1 - alpha;
+    set_coefficients(a0, a1, a2, b0, b1, b2);
+  }
+
+  void set_high_pass(double center_frequency, double sampling_frequency, double quality) {
+    auto w0 = 2 * M_PI * center_frequency / sampling_frequency;
+    auto alpha = std::sin(w0) / (2 * quality);
+    auto b0 =  (1 + std::cos(w0))/2;
+    auto b1 = -(1 + std::cos(w0));
+    auto b2 =  (1 + std::cos(w0))/2;
+    auto a0 =   1 + alpha;
+    auto a1 =  -2 * std::cos(w0);
+    auto a2 =   1 - alpha;
+    set_coefficients(a0, a1, a2, b0, b1, b2);
+  }
+
+  void set_high_shelf(double center_frequency, double sampling_frequency, double db_gain, double quality) {
+    auto w0 = 2 * M_PI * center_frequency / sampling_frequency;
+    auto A = std::pow(10, db_gain / 40);
+    auto alpha = std::sin(w0) / (2 * quality);
+
+    auto b0 =      A * ((A + 1) + (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha);
+    auto b1 = -2 * A * ((A - 1) + (A + 1) * std::cos(w0)                           ); 
+    auto b2 =      A * ((A + 1) + (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha);
+    auto a0 =           (A + 1) - (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha;
+    auto a1 =  2 *     ((A - 1) - (A + 1) * std::cos(w0)                           );
+    auto a2 =           (A + 1) - (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha;
+    set_coefficients(a0, a1, a2, b0, b1, b2);
+  }
+
+  float process(float x0) {
+    auto y0 = fb0 * x0 + fb1 * x1 + fb2 * x2 - y1 * fa1 - y2 * fa2;
+
+    y2 = y1;
+    y1 = y0;
+
+    x2 = x1;
+    x1 = x0;
+
+    return y0;
+  }
+};
+
 class FilterState {
  private:
   std::vector<float> data;
   size_t data_index = 0;
 
-  float lowpass_coeff = 0;
-  float lowpass_state = 0;
-
-  float highpass_coeff = 0;
-  float highpass_state = 0;
+  Biquad highpass;
+  Biquad shelf;
+  Biquad lowpass;
 
  public:
   /**
-   * Configure internal delay line length
-   *
-   * @param size number of samples to keep
+   * Set up filtering line for specific delay and configure filters with sample rate.
    */
-  void set_delay_length(size_t size) {
-    if (data.size() != size) {
-      data.resize(size);
+  void configure(double delay_us, double rate) {
+    /* Configure delay line for the appropriate length (full sample precision only) */
+    if (auto samples = static_cast<size_t>(std::round(delay_us / 1.0e6 * rate)); data.size() != samples) {
+      data.resize(samples);
       data_index = 0;
     }
+
+    /* 
+     * Shelf and lowpass were fitted in REW, using a reference picture of the frequency response
+     * measurement of a head fixture. The incident angle was about 45 degrees.
+     * The general fit is within about 2 dB from 300 Hz to 7000 Hz with -4 dB fixed gain.
+     *
+     * Modal behavior of rooms prevents doing anything with respect to bass localization, so
+     * preventing it from entering the delay line makes sense. ILD in bass is basically zero,
+     * and it would be unstable.
+     */
+    highpass.set_high_pass(140, rate, 0.707);
+    shelf.set_high_shelf(650, rate, -6.0, 0.707);
+    lowpass.set_low_pass(3700, rate, 0.707);
   }
 
   /**
@@ -65,48 +153,11 @@ class FilterState {
    * @param sample the sample to store
    */
   void put_sample(float sample) {
+    sample = highpass.process(sample);
+    sample = shelf.process(sample);
+    sample = lowpass.process(sample);
     data[data_index] = sample;
     data_index = (data_index + 1) % data.size();
-  }
-
-  /**
-   * Configure lowpass filter
-   *
-   * @param f the fractional sample rate (fs = 1)
-   */
-  void set_lowpass(float f) {
-    lowpass_coeff = static_cast<float>(std::exp(-2 * M_PI * f));
-  }
-
-  /**
-   * Perform lowpass filtering and return the sample
-   * 
-   * @param sample the sample to input
-   * @return lowpassed sample
-   */
-  float lowpass(float sample) {
-    lowpass_state = lowpass_state * lowpass_coeff + sample * (1 - lowpass_coeff);
-    return lowpass_state;
-  }
-
-  /**
-   * Configure highpass filter
-   *
-   * @param f the fractional sample rate (fs = 1)
-   */
-  void set_highpass(float f) {
-    highpass_coeff = static_cast<float>(std::exp(-2 * M_PI * f));
-  }
-
-  /**
-   * Perform highpass filtering and return the sample
-   * 
-   * @param sample the sample to input
-   * @return highpassed sample
-   */
-  float highpass(float sample) {
-    highpass_state = highpass_state * highpass_coeff + sample * (1 - highpass_coeff);
-    return sample - highpass_state;
   }
 };
 

@@ -31,15 +31,6 @@
 #include "tags_plugin_name.hpp"
 #include "util.hpp"
 
-/* Interaural level difference parameters. These are inherently a compromise.
- * Midrange localization is most practical to achieve, but bass should not be canceled.
- * Any high frequency localization forces listening with head locked in a vice
- * due to wavelength. These will require much experimentation and possibly precisely
- * designed better filter shape than this rough stab. */
-const auto ILD_LOWPASS_HZ = 1600.0f;
-/* low frequency limit */
-const auto LOW_FREQ_LIMIT_HZ = 200.0f;
-
 LCC::LCC(const std::string& tag,
          const std::string& schema,
          const std::string& schema_path,
@@ -80,16 +71,8 @@ LCC::~LCC() {
 void LCC::setup() {
   std::scoped_lock<std::mutex> lock(data_mutex);
 
-  /* The required buffer size for the stereo delay line. */
-  auto samples = static_cast<size_t>(std::round(delay_us / 1.0e6 * rate));
-  a.set_delay_length(samples);
-  b.set_delay_length(samples);
-
-  a.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
-  b.set_lowpass(ILD_LOWPASS_HZ / static_cast<float>(rate));
-
-  a.set_highpass(LOW_FREQ_LIMIT_HZ / static_cast<float>(rate));
-  b.set_highpass(LOW_FREQ_LIMIT_HZ / static_cast<float>(rate));
+  a.configure(delay_us, rate);
+  b.configure(delay_us, rate);
 }
 
 /* Perform stereo crossfeed that cancels contralateral audio. */
@@ -118,9 +101,6 @@ void LCC::process(std::span<float>& left_in,
       auto mo = middle - decay_gain * a.get_sample();
       left_out[n] = (mo + side) * .5f;
       right_out[n] = (mo - side) * .5f;
-
-      mo = a.lowpass(mo);
-      mo = a.highpass(mo);
       a.put_sample(mo);
     }
   } else {
@@ -129,13 +109,6 @@ void LCC::process(std::span<float>& left_in,
       auto bo = right_in[n] - decay_gain * a.get_sample();
       left_out[n] = ao;
       right_out[n] = bo;
-
-      ao = a.lowpass(ao);
-      bo = b.lowpass(bo);
-
-      ao = a.highpass(ao);
-      bo = b.highpass(bo);
-
       a.put_sample(ao);
       b.put_sample(bo);
     }
