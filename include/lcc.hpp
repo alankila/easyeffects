@@ -1,5 +1,6 @@
 /*
- *  Copyright © 2017-2024 Antti S. Lankila  <alankila@bel.fi>
+ *  Copyright © 2017-2025 Wellington Wallace
+ *  Localization Cue Correction plugin developed by Antti S. Lankila <alankila@bel.fi>
  *
  *  This file is part of Easy Effects.
  *

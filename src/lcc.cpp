@@ -1,5 +1,6 @@
 /*
- *  Copyright © 2025 Antti S. Lankila <alankila@bel.fi>
+ *  Copyright © 2017-2025 Wellington Wallace
+ *  Localization Cue Correction plugin developed by Antti S. Lankila <alankila@bel.fi>
  *
  *  This file is part of Easy Effects.
  *
@@ -75,7 +76,6 @@ void LCC::setup() {
   b.configure(delay_us, rate);
 }
 
-/* Perform stereo crossfeed that cancels contralateral audio. */
 void LCC::process(std::span<float>& left_in,
                   std::span<float>& right_in,
                   std::span<float>& left_out,
