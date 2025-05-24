@@ -33,7 +33,7 @@ class Biquad {
  private:
   float fa1 = 0;
   float fa2 = 0;
-  float fb0 = 0;
+  float fb0 = 1;
   float fb1 = 0;
   float fb2 = 0;
 
@@ -90,6 +90,20 @@ class Biquad {
     set_coefficients(a0, a1, a2, b0, b1, b2);
   }
 
+  void set_peaking_band(double center_frequency, double sampling_frequency, double db_gain, double quality) {
+    auto w0 = 2 * M_PI * center_frequency / sampling_frequency;
+    auto A = std::pow(10, db_gain / 40);
+    auto alpha = std::sin(w0) / (2 * quality);
+
+    auto b0 =  1 + alpha*A;
+    auto b1 = -2 * std::cos(w0);
+    auto b2 =  1 - alpha*A;
+    auto a0 =  1 + alpha/A;
+    auto a1 = -2 * std::cos(w0);
+    auto a2 =  1 - alpha/A;
+    set_coefficients(a0, a1, a2, b0, b1, b2);
+  }
+
   float process(float x0) {
     auto y0 = fb0 * x0 + fb1 * x1 + fb2 * x2 - y1 * fa1 - y2 * fa2;
 
@@ -108,9 +122,13 @@ class FilterState {
   std::vector<float> data;
   size_t data_index = 0;
 
-  Biquad highpass;
-  Biquad shelf;
-  Biquad lowpass;
+  Biquad f1;
+  Biquad f2;
+  Biquad f3;
+  Biquad f4;
+  Biquad f5;
+  Biquad f6;
+  Biquad f7;
 
  public:
   /**
@@ -124,17 +142,24 @@ class FilterState {
     }
 
     /* 
-     * Shelf and lowpass were fitted in REW, using a reference picture of the frequency response
-     * measurement of a head fixture. The incident angle was about 45 degrees.
-     * The general fit is within about 2 dB from 300 Hz to 7000 Hz with -4 dB fixed gain.
+     * Measured head shadow for 30 degree incident angle,
+     * 2 fixed filters from me, REW optimized 5 PK filters:
      *
-     * Modal behavior of rooms prevents doing anything with respect to bass localization, so
-     * preventing it from entering the delay line makes sense. ILD in bass is basically zero,
-     * and it would be unstable.
+     * 1 True Manual HP_Q 140.0 0.00 0.710 
+     * 2 True Auto PK 1306 1.70 1.000 1306 
+     * 3 True Auto PK 1682 4.90 2.850 590.2 
+     * 4 True Auto PK 2480 -22.20 1.114 2226 
+     * 5 True Manual LP_Q 3000 0.00 1.00 
+     * 6 True Auto PK 3525 1.80 7.006 503.1 
+     * 7 True Auto PK 4048 7.50 2.928 1383 
      */
-    highpass.set_high_pass(140, rate, 0.707);
-    shelf.set_high_shelf(600, rate, -5.0, 1);
-    lowpass.set_low_pass(3700, rate, 0.707);
+    f1.set_high_pass(140, rate, 0.710);
+    f2.set_peaking_band(1306, rate, 1.7, 1.0);
+    f3.set_peaking_band(1682, rate, 4.9, 2.85);
+    f4.set_peaking_band(2480, rate, -22.2, 1.114);
+    f5.set_low_pass(3000, rate, 1.0);
+    f6.set_peaking_band(3525, rate, 1.8, 7.006);
+    f7.set_peaking_band(4048, rate, 7.5, 2.928);
   }
 
   /**
@@ -153,9 +178,13 @@ class FilterState {
    * @param sample the sample to store
    */
   void put_sample(float sample) {
-    sample = highpass.process(sample);
-    sample = shelf.process(sample);
-    sample = lowpass.process(sample);
+    sample = f1.process(sample);
+    sample = f2.process(sample);
+    sample = f3.process(sample);
+    sample = f4.process(sample);
+    sample = f5.process(sample);
+    sample = f6.process(sample);
+    sample = f7.process(sample);
     data[data_index] = sample;
     data_index = (data_index + 1) % data.size();
   }
