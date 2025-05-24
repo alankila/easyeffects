@@ -152,7 +152,7 @@ class FilterState {
      * calculate ipsi / contra magnitude spectrum measurement, and then let REW optimize
      * it to flat +2 dB target.
      */
-    f1.set_high_pass(140, rate, 0.710);
+    f1.set_high_pass(300, rate, 0.710);
     f2.set_peaking_band(1042, rate, -7.4, 1.798);
     f3.set_peaking_band(2221, rate, -6.2, 3.140);
     f4.set_low_pass(3000, rate, 1.0);
