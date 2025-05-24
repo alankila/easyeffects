@@ -21,7 +21,7 @@
         </key>
         <key name="decay-db" type="d">
             <range min="-6" max="0" />
-            <default>-4</default>
+            <default>-2</default>
         </key>
     </schema>
 </schemalist>

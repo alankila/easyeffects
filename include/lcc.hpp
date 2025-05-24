@@ -141,25 +141,28 @@ class FilterState {
       data_index = 0;
     }
 
-    /* 
-     * Measured head shadow for 30 degree incident angle,
-     * 2 fixed filters from me, REW optimized 5 PK filters:
+    /*
+     * Standard kemar head fixture, digitized
+     * from picture at https://www.intechopen.com/chapters/45612
+     *
+     * REW fit is made with fixed gain of -2 dB.
      *
      * 1 True Manual HP_Q 140.0 0.00 0.710 
-     * 2 True Auto PK 1306 1.70 1.000 1306 
-     * 3 True Auto PK 1682 4.90 2.850 590.2 
-     * 4 True Auto PK 2480 -22.20 1.114 2226 
-     * 5 True Manual LP_Q 3000 0.00 1.00 
-     * 6 True Auto PK 3525 1.80 7.006 503.1 
-     * 7 True Auto PK 4048 7.50 2.928 1383 
+     * 2 True Auto PK 788.0 -2.80 1.467 537.2 
+     * 3 True Auto PK 1034 -5.90 4.389 235.6 
+     * 4 True Auto PK 1287 -3.00 4.999 257.5 
+     * 5 True Auto PK 2195 -6.80 3.125 702.4 
+     * 6 True Manual LP_Q 3000 0.00 1.00 
+     * 7 True Auto PK 3567 -5.40 2.950 1209 
      */
+
     f1.set_high_pass(140, rate, 0.710);
-    f2.set_peaking_band(1306, rate, 1.7, 1.0);
-    f3.set_peaking_band(1682, rate, 4.9, 2.85);
-    f4.set_peaking_band(2480, rate, -22.2, 1.114);
-    f5.set_low_pass(3000, rate, 1.0);
-    f6.set_peaking_band(3525, rate, 1.8, 7.006);
-    f7.set_peaking_band(4048, rate, 7.5, 2.928);
+    f2.set_peaking_band(788, rate, -2.8, 1.467);
+    f3.set_peaking_band(1034, rate, -5.9, 4.389);
+    f4.set_peaking_band(1287, rate, -3, 4.999);
+    f5.set_peaking_band(2195, rate, -6.8, 3.125);
+    f6.set_low_pass(3000, rate, 1.0);
+    f7.set_peaking_band(3567, rate, -5.4, 2.950);
   }
 
   /**
@@ -214,7 +217,7 @@ class LCC : public PluginBase {
 
   bool phantom_center_only = false;
   float delay_us = 310;
-  float decay_db = -4;
+  float decay_db = -2;
 
  private:
   FilterState a;
