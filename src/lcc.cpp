@@ -98,15 +98,15 @@ void LCC::process(std::span<float>& left_in,
     for (size_t n = 0U; n < left_in.size(); n ++) {
       float middle = left_in[n] + right_in[n];
       float side = left_in[n] - right_in[n];
-      auto mo = middle - decay_gain * a.get_sample();
+      auto mo = a.get_direct(middle) - decay_gain * a.get_sample();
       left_out[n] = (mo + side) * .5f;
       right_out[n] = (mo - side) * .5f;
       a.put_sample(mo);
     }
   } else {
     for (size_t n = 0U; n < left_in.size(); n ++) {
-      auto ao = left_in[n] - decay_gain * b.get_sample();
-      auto bo = right_in[n] - decay_gain * a.get_sample();
+      auto ao = a.get_direct(left_in[n]) - decay_gain * b.get_sample();
+      auto bo = b.get_direct(right_in[n]) - decay_gain * a.get_sample();
       left_out[n] = ao;
       right_out[n] = bo;
       a.put_sample(ao);

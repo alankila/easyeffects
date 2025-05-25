@@ -52,6 +52,18 @@ class Biquad {
   }
 
  public:
+  void set_allpass(double center_frequency, double sampling_frequency, double quality) {
+    auto w0 = 2 * M_PI * center_frequency / sampling_frequency;
+    auto alpha = std::sin(w0) / (2 * quality);
+    auto b0 =  1 - alpha;
+    auto b1 = -2 * std::cos(w0);
+    auto b2 =  1 + alpha;
+    auto a0 =  1 + alpha;
+    auto a1 = -2 * std::cos(w0);
+    auto a2 =  1 - alpha;
+    set_coefficients(a0, a1, a2, b0, b1, b2);
+  }
+
   void set_low_pass(double center_frequency, double sampling_frequency, double quality) {
     auto w0 = 2 * M_PI * center_frequency / sampling_frequency;
     auto alpha = std::sin(w0) / (2 * quality);
@@ -123,11 +135,15 @@ class FilterState {
   std::vector<float> data;
   size_t data_index = 0;
 
+  /* Feedback correction filters*/
   Biquad f1;
   Biquad f2;
   Biquad f3;
   Biquad f4;
   Biquad f5;
+
+  /* Direct correction filters */
+  Biquad d1;
 
  public:
   /**
@@ -158,6 +174,19 @@ class FilterState {
     f3.set_peaking_band(2221, rate, -6.2, 3.140);
     f4.set_low_pass(3000, rate, 1.0);
     f5.set_peaking_band(3702, rate, -5.4, 3.108);
+
+    /* An allpass filter replicates ~90 % of the phase warping across the feedback for direct sound.
+     * With these parameters, the passband RMS error is only about 13 degrees,
+     * which is still in order of 30 us at 1 kHz. */
+    d1.set_allpass(925, rate, 0.24);
+  }
+
+  /**
+   * Apply phase correction to input to minimize the phase error between feedback-filtered and direct sound.
+   * This aligns the timing error relatively closely between the outputs.
+   */
+  float get_direct(float sample) {
+    return -d1.process(sample);
   }
 
   /**
