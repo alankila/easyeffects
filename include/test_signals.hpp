@@ -30,6 +30,40 @@
 
 enum class TestSignalType { sine_wave, gaussian, pink };
 
+class Pinkify {
+ private:
+  float x1 = 0;
+  float x2 = 0;
+  float x3 = 0;
+
+  float y1 = 0;
+  float y2 = 0;
+  float y3 = 0;
+
+ public:
+  float process(float x0) {
+    /* From julius o. smith, to convert white noise to pink noise:
+     *    
+     * B = [0.049922035 -0.095993537 0.050612699 -0.004408786];
+     * A = [1 -2.494956002 2.017265875 -0.522189400];
+     *
+     * Note: a0 is 1, so other parameters are used as-is.
+     */
+    auto y0 = 0.049922035f * x0 - 0.095993537f * x1 + 0.050612699f * x2 - 0.004408786f * x3
+      + 2.494956002f * y1 - 2.017265875f * y2 + 0.522189400f * y3;
+
+    y3 = y2;
+    y2 = y1;
+    y1 = y0;
+
+    x3 = x2;
+    x2 = x1;
+    x1 = x0;
+
+    return y0;
+  }
+};
+
 class TestSignals {
  public:
   TestSignals(PipeManager* pipe_manager);
@@ -69,6 +103,8 @@ class TestSignals {
   float sine_phase = 0.0F;
 
   float sine_frequency = 1000.0F;
+
+  Pinkify pinkify;
 
   TestSignalType signal_type = TestSignalType::sine_wave;
 

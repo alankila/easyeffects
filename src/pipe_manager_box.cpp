@@ -131,6 +131,12 @@ void on_checkbutton_signal_gaussian(PipeManagerBox* self, GtkCheckButton* btn) {
   }
 }
 
+void on_checkbutton_signal_pink(PipeManagerBox* self, GtkCheckButton* btn) {
+  if (gtk_check_button_get_active(btn) != 0) {
+    self->data->ts->signal_type = TestSignalType::pink;
+  }
+}
+
 void on_autoloading_add_input_profile(PipeManagerBox* self, GtkButton* btn) {
   auto* holder = static_cast<ui::holders::NodeInfoHolder*>(
       gtk_drop_down_get_selected_item(self->dropdown_autoloading_input_devices));
@@ -893,6 +899,7 @@ void pipe_manager_box_class_init(PipeManagerBoxClass* klass) {
   gtk_widget_class_bind_template_callback(widget_class, on_checkbutton_channel_both);
   gtk_widget_class_bind_template_callback(widget_class, on_checkbutton_signal_sine);
   gtk_widget_class_bind_template_callback(widget_class, on_checkbutton_signal_gaussian);
+  gtk_widget_class_bind_template_callback(widget_class, on_checkbutton_signal_pink);
   gtk_widget_class_bind_template_callback(widget_class, on_stack_visible_child_changed);
   gtk_widget_class_bind_template_callback(widget_class, on_autoloading_add_input_profile);
   gtk_widget_class_bind_template_callback(widget_class, on_autoloading_add_output_profile);

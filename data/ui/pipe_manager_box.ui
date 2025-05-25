@@ -630,6 +630,14 @@
                                                         <signal name="toggled" handler="on_checkbutton_signal_gaussian" object="PipeManagerBox" />
                                                     </object>
                                                 </child>
+
+                                                <child>
+                                                    <object class="GtkCheckButton" id="checkbutton_signal_pink">
+                                                        <property name="group">checkbutton_signal_sine</property>
+                                                        <property name="label" translatable="yes">Pink Noise</property>
+                                                        <signal name="toggled" handler="on_checkbutton_signal_pink" object="PipeManagerBox" />
+                                                    </object>
+                                                </child>
                                             </object>
                                         </child>
 
