@@ -97,14 +97,14 @@ f4.set_low_pass(3000, rate, 1.0)
 f5.set_peaking_band(3702, rate, -5.4, 3.108)
 decay = -2
 
-f6 = Biquad()
-f6.set_allpass(925, rate, 0.24)
+d1 = Biquad()
+d1.set_allpass(870, rate, 0.22)
 
 def transfer(omega):
   return f1.transfer(omega) * f2.transfer(omega) * f3.transfer(omega) * f4.transfer(omega) * f5.transfer(omega) * 10 ** (decay / 20)
 
 def transfer_allpass(omega):
-  return -f6.transfer(omega)
+  return -d1.transfer(omega)
 
 def process(sample):
   sample = f1.process(sample)
@@ -116,7 +116,7 @@ def process(sample):
   return sample
 
 def process_allpass(sample):
-  return -f6.process(sample)
+  return -d1.process(sample)
 
 def dump_impulse():
   print(

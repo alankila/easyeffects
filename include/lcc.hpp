@@ -178,7 +178,7 @@ class FilterState {
     /* An allpass filter replicates ~90 % of the phase warping across the feedback for direct sound.
      * With these parameters, the passband RMS error is only about 13 degrees,
      * which is still in order of 30 us at 1 kHz. */
-    d1.set_allpass(925, rate, 0.24);
+    d1.set_allpass(870, rate, 0.22);
   }
 
   /**
