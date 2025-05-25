@@ -51,7 +51,7 @@ auto get_translated() -> std::map<std::string, std::string> {
                                                    {expander, _("Expander")},
                                                    {filter, _("Filter")},
                                                    {gate, _("Gate")},
-						   {lcc, _("Localization Cue Correction")},
+						   {lcc, _("Crosstalk Canceller")},
                                                    {level_meter, _("Level Meter")},
                                                    {limiter, _("Limiter")},
                                                    {loudness, _("Loudness")},
