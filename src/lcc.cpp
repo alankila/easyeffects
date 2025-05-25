@@ -99,9 +99,11 @@ void LCC::process(std::span<float>& left_in,
       float middle = left_in[n] + right_in[n];
       float side = left_in[n] - right_in[n];
       auto mo = a.get_direct(middle) - decay_gain * a.get_sample();
-      left_out[n] = (mo + side) * .5f;
-      right_out[n] = (mo - side) * .5f;
+      auto so = b.get_direct(side);
+      left_out[n] = (mo + so) * .5f;
+      right_out[n] = (mo - so) * .5f;
       a.put_sample(mo);
+      /* No delay line input from b */
     }
   } else {
     for (size_t n = 0U; n < left_in.size(); n ++) {
