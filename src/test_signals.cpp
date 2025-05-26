@@ -92,7 +92,7 @@ void on_process(void* userdata, spa_io_position* position) {
         break;
       }
       case TestSignalType::pink: {
-        signal = d->ts->pinkify.process(d->ts->white_noise());
+        signal = d->ts->pinkify.process(d->ts->white_noise(), rate);
         break;
       }
     }

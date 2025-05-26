@@ -41,7 +41,7 @@ class Pinkify {
   float y3 = 0;
 
  public:
-  float process(float x0) {
+  float process(float x0, float rate) {
     /* From julius o. smith, to convert white noise to pink noise:
      *    
      * B = [0.049922035 -0.095993537 0.050612699 -0.004408786];
@@ -60,7 +60,7 @@ class Pinkify {
     x2 = x1;
     x1 = x0;
 
-    return y0;
+    return y0 * (1 << 18) / rate;
   }
 };
 
