@@ -175,15 +175,16 @@ class FilterState {
     f4.set_low_pass(3000, rate, 1.0);
     f5.set_peaking_band(3702, rate, -5.4, 3.108);
 
-    /* An allpass filter replicates ~90 % of the phase warping across the feedback for direct sound.
-     * With these parameters, the passband RMS error is only about 13 degrees,
-     * which is still in order of 30 us at 1 kHz. */
-    d1.set_allpass(870, rate, 0.22);
+    /* 
+     * Apply phase correction to input to minimize the timing error between feedback-filtered and direct sound.
+     * Maximum error is bounded to about 40 us within the passband and phase error within about 21 degrees.
+     */
+    d1.set_allpass(750, rate, 0.165);
   }
 
   /**
    * Apply phase correction to input to minimize the phase error between feedback-filtered and direct sound.
-   * This aligns the timing error relatively closely between the outputs.
+   * This aligns the timing relatively closely between the cancellation and direct sound.
    */
   float get_direct(float sample) {
     return -d1.process(sample);

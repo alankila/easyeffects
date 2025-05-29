@@ -98,7 +98,7 @@ f5.set_peaking_band(3702, rate, -5.4, 3.108)
 decay = -2
 
 d1 = Biquad()
-d1.set_allpass(870, rate, 0.22)
+d1.set_allpass(750, rate, 0.165)
 
 def transfer(o):
   o = math.cos(o) + math.sin(o) * 1j
@@ -141,21 +141,22 @@ def dump_impulse():
     print(0);
   sample = 1
   for _ in range(0, 65536 - 16384):
-    output = process(sample)
+    output = process_allpass(sample)
     print("%.15g" % output)
     sample = 0
 
-def dump_freq():
-  hz = 20
-  print("# frequency magnitude/db phase/deg phase_delay/us group_delay/ms processing_phase_mismatch/deg")
+def dump_freq(printing = True, error_is_phase = True):
+  if printing:
+    print("# frequency magnitude/db phase/deg phase_delay/us group_delay/ms error_angle/deg error_delay/us")
 
   error_avg = 0
   error_n = 1
   error_max_freq = 0
-  error_max_phase = 0
+  error_max_value = 0
   error_max = 0
 
-  while hz < 20000:
+  hz = 500
+  while hz < 4000:
     o = hz * 2 * math.pi
     o2 = o + 1e-5;
 
@@ -164,29 +165,66 @@ def dump_freq():
 
     magnitude = math.log(abs(result)) / math.log(10) * 20
     phase = math.atan2(result.imag, result.real) / math.pi * 180
-    phase_delay_us = phase / 360 / hz * 1e6
+    phase_delay_us = -math.atan2(result.imag, result.real) / o * 1e6
 
     gd_difference = result2 / result
     group_delay_ms = -(math.atan2(gd_difference.imag, gd_difference.real)) / (o2 - o) * 1e3;
 
     # DSP with direct sound corrected with allpass filter compared to phase delay
-    result_direct = transfer_allpass(o / rate) / result
-    error_phase = math.atan2(result_direct.imag, result_direct.real) / math.pi * 180
+    diff = transfer_allpass(o / rate) / result
+    diff_phase = -math.atan2(diff.imag, diff.real) / math.pi * 180
+    diff_phase_delay = -math.atan2(diff.imag, diff.real) / o * 1e6
 
     # Optimization target: weighted root mean square error_us
-    weight = abs(result)
-    weighted_error = error_phase ** 2 * weight
+    if error_is_phase:
+      error = diff_phase
+    else:
+      error = diff_phase_delay
+
+    # We don't weight by the abs(result) because attenuation within
+    # filter doesn't describe importance except < 300 Hz.
+    weight = 1 # abs(result)
+    weighted_error = error ** 2 * weight
     error_avg += weighted_error
     error_n += weight
     if weighted_error > error_max:
       error_max = weighted_error
-      error_max_phase = error_phase
+      error_max_value = error
       error_max_freq = hz
 
-    print("%f %f %f %f %f %f" % (hz, magnitude, phase, phase_delay_us, group_delay_ms, error_phase))
+    if printing:
+      print("%f %f %f %f %f %f %f" % (hz, magnitude, phase, phase_delay_us, group_delay_ms, diff_phase, diff_phase_delay))
     hz *= 1.02
-  print("# weighted passband phase error rms: %f deg" % ((error_avg / error_n) ** 0.5))
-  print("# worst case is %f Hz with %f deg" % (error_max_freq, error_max_phase));
 
-dump_freq()
+  rms = (error_avg / error_n) ** 0.5 
+  if printing:
+    print("# weighted passband error rms: %f" % rms)
+    print("# worst case is %f Hz with %f" % (error_max_freq, error_max_value));
+  return (rms, abs(error_max_value))
+
+dump_freq(True, False)
 #dump_impulse()
+
+if True:
+  score_pha = 9999
+  best_pha = ()
+  score_del = 9999
+  best_del = ()
+  for r in range(700, 900, 10):
+    for q in range(1500, 2500, 5):
+      q /= 10000
+      d1.set_allpass(r, rate, q)
+      delay = dump_freq(False, False)[1]
+
+      if score_del > delay:
+        score_del = delay
+        best_del = (r, q, delay)
+
+      phase = dump_freq(False, True)[1]
+      if score_pha > phase:
+        score_pha = phase
+        best_pha = (r, q, phase)
+
+      #print("%.0f / %.02f => %.1f us / %.1f deg" % (r, q, delay, phase))
+  print("best phase: %s" % str(best_pha))
+  print("best delay: %s" % str(best_del))
