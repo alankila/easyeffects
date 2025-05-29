@@ -132,14 +132,16 @@ def dump_impulse():
 * Excitation: Comma/Tab/Space delimited data
 * Response measured over: 20.0 to 19,052.7 Hz
 1 // Peak value before normalisation
-0 // Peak index
+16348 // Peak index
 65536 // Response length
 2.0833333333333333E-5 // Sample interval (seconds)
-0 // Start time (seconds)
+-0.3413333333333333 // Start time (seconds)
 * Data start""")
+  for _ in range(0, 16384):
+    print(0);
   sample = 1
-  for _ in range(0, 65536):
-    output = process_allpass(sample)
+  for _ in range(0, 65536 - 16384):
+    output = process(sample)
     print("%.15g" % output)
     sample = 0
 
