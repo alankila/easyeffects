@@ -68,9 +68,9 @@ class Biquad:
     a2 =  1 - alpha
     self.set_coefficients(a0, a1, a2, b0, b1, b2)
 
-  def transfer(self, omega):
-    nom = self.b0 + self.b1 / omega + self.b2 / (omega*omega)
-    den =       1 + self.a1 / omega + self.a2 / (omega*omega)
+  def transfer(self, z):
+    nom = self.b0 + self.b1 / z + self.b2 / (z*z)
+    den =       1 + self.a1 / z + self.a2 / (z*z)
     return nom / den
 
   def process(self, x0):
@@ -100,11 +100,13 @@ decay = -2
 d1 = Biquad()
 d1.set_allpass(870, rate, 0.22)
 
-def transfer(omega):
-  return f1.transfer(omega) * f2.transfer(omega) * f3.transfer(omega) * f4.transfer(omega) * f5.transfer(omega) * 10 ** (decay / 20)
+def transfer(o):
+  o = math.cos(o) + math.sin(o) * 1j
+  return f1.transfer(o) * f2.transfer(o) * f3.transfer(o) * f4.transfer(o) * f5.transfer(o) * 10 ** (decay / 20)
 
-def transfer_allpass(omega):
-  return -d1.transfer(omega)
+def transfer_allpass(o):
+  o = math.cos(o) + math.sin(o) * 1j
+  return -d1.transfer(o)
 
 def process(sample):
   sample = f1.process(sample)
@@ -143,7 +145,7 @@ def dump_impulse():
 
 def dump_freq():
   hz = 20
-  print("# frequency magnitude/db phase/deg phase_delay/us group_delay/us processing_phase_mismatch/deg")
+  print("# frequency magnitude/db phase/deg phase_delay/us group_delay/ms processing_phase_mismatch/deg")
 
   error_avg = 0
   error_n = 1
@@ -152,23 +154,21 @@ def dump_freq():
   error_max = 0
 
   while hz < 20000:
-    hz2 = hz * 1.001
-    angle = hz / rate * 2 * math.pi
-    angle2 = hz2 / rate * 2 * math.pi
-    omega = math.cos(angle) + math.sin(angle) * 1j
-    omega2 = math.cos(angle2) + math.sin(angle2) * 1j
+    o = hz * 2 * math.pi
+    o2 = o + 1e-5;
 
-    result = transfer(omega)
-    result2 = transfer(omega2)
+    result = transfer(o / rate)
+    result2 = transfer(o2 / rate)
 
     magnitude = math.log(abs(result)) / math.log(10) * 20
     phase = math.atan2(result.imag, result.real) / math.pi * 180
-    phase2 = math.atan2(result2.imag, result2.real) / math.pi * 180
     phase_delay_us = phase / 360 / hz * 1e6
-    group_delay_us = -(phase2 - phase) / 360 / (hz2 - hz) * 1e6
+
+    gd_difference = result2 / result
+    group_delay_ms = -(math.atan2(gd_difference.imag, gd_difference.real)) / (o2 - o) * 1e3;
 
     # DSP with direct sound corrected with allpass filter compared to phase delay
-    result_direct = transfer_allpass(omega) / result
+    result_direct = transfer_allpass(o / rate) / result
     error_phase = math.atan2(result_direct.imag, result_direct.real) / math.pi * 180
 
     # Optimization target: weighted root mean square error_us
@@ -181,7 +181,7 @@ def dump_freq():
       error_max_phase = error_phase
       error_max_freq = hz
 
-    print("%f %f %f %f %f %f" % (hz, magnitude, phase, phase_delay_us, group_delay_us, error_phase))
+    print("%f %f %f %f %f %f" % (hz, magnitude, phase, phase_delay_us, group_delay_ms, error_phase))
     hz *= 1.02
   print("# weighted passband phase error rms: %f deg" % ((error_avg / error_n) ** 0.5))
   print("# worst case is %f Hz with %f deg" % (error_max_freq, error_max_phase));
