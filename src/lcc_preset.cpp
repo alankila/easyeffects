@@ -59,7 +59,7 @@ void LCCPreset::load(const nlohmann::json& json) {
 
   update_key<bool>(json.at(section).at(instance_name), settings, "phantom-center-only", "phantom-center-only");
 
-  update_key<float>(json.at(section).at(instance_name), settings, "delay-us", "delay-us");
+  update_key<double>(json.at(section).at(instance_name), settings, "delay-us", "delay-us");
 
-  update_key<float>(json.at(section).at(instance_name), settings, "decay-db", "decay-db");
+  update_key<double>(json.at(section).at(instance_name), settings, "decay-db", "decay-db");
 }

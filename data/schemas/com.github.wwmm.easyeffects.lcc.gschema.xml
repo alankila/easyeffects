@@ -17,7 +17,7 @@
         </key>
         <key name="delay-us" type="d">
             <range min="200" max="500" />
-            <default>310</default>
+            <default>313</default>
         </key>
         <key name="decay-db" type="d">
             <range min="-6" max="0" />

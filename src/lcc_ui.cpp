@@ -125,10 +125,7 @@ void setup(LCCBox* self, std::shared_ptr<LCC> lcc, const std::string& schema_pat
   gtk_label_set_text(self->plugin_credit, ui::get_plugin_credit_translated(self->data->lcc->package).c_str());
 
   gsettings_bind_widgets<"input-gain", "output-gain">(self->settings, self->input_gain, self->output_gain);
-
-  g_settings_bind(self->settings, "phantom-center-only", self->phantom_center_only, "active", G_SETTINGS_BIND_DEFAULT);
-  g_settings_bind(self->settings, "delay-us", gtk_spin_button_get_adjustment(self->delay_us), "value", G_SETTINGS_BIND_DEFAULT);
-  g_settings_bind(self->settings, "decay-db", gtk_spin_button_get_adjustment(self->decay_db), "value", G_SETTINGS_BIND_DEFAULT);
+  gsettings_bind_widgets<"phantom-center-only", "delay-us", "decay-db">(self->settings, self->phantom_center_only, self->delay_us, self->decay_db);
 }
 
 void dispose(GObject* object) {

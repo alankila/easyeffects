@@ -38,12 +38,11 @@ LCC::LCC(const std::string& tag,
          PipeManager* pipe_manager,
          PipelineType pipe_type)
     : PluginBase(tag, tags::plugin_name::lcc, tags::plugin_package::ee, schema, schema_path, pipe_manager, pipe_type) {
-  gconnections.push_back(g_signal_connect(settings, "changed::phantom-center-only",
-                                          G_CALLBACK(+[](GSettings* settings, char* key, gpointer user_data) {
-                                            auto* self = static_cast<LCC*>(user_data);
-                                            self->phantom_center_only = g_settings_get_boolean(settings, key);
-                                          }),
-                                          this));
+
+  delay_us = g_settings_get_double(settings, "delay-us");
+  decay_db = g_settings_get_double(settings, "decay-db");
+  phantom_center_only = g_settings_get_boolean(settings, "phantom-center-only");
+
   gconnections.push_back(g_signal_connect(settings, "changed::delay-us",
                                           G_CALLBACK(+[](GSettings* settings, char* key, gpointer user_data) {
                                             auto* self = static_cast<LCC*>(user_data);
@@ -55,6 +54,12 @@ LCC::LCC(const std::string& tag,
                                           G_CALLBACK(+[](GSettings* settings, char* key, gpointer user_data) {
                                             auto* self = static_cast<LCC*>(user_data);
                                             self->decay_db = g_settings_get_double(settings, key);
+                                          }),
+                                          this));
+  gconnections.push_back(g_signal_connect(settings, "changed::phantom-center-only",
+                                          G_CALLBACK(+[](GSettings* settings, char* key, gpointer user_data) {
+                                            auto* self = static_cast<LCC*>(user_data);
+                                            self->phantom_center_only = g_settings_get_boolean(settings, key);
                                           }),
                                           this));
 
