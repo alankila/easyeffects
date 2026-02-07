@@ -141,6 +141,7 @@ class FilterState {
   Biquad f3;
   Biquad f4;
   Biquad f5;
+  Biquad f6;
 
  public:
   /**
@@ -162,14 +163,20 @@ class FilterState {
      * the magnitudes required must be subtracted: contra - ipsi, and an equalization must
      * reproduce that shape.
      *
-     * This EQ was fitted in REW and then hand optimized by simulating the resulting cancellation
-     * against head profile.
+     * This EQ was fitted in REW with -1 dB fixed offset between ipsi and contra.
+     *
+     * Filter  1: ON  LP Q     Fc    3245 Hz  Q  0.710
+     * Filter  2: ON  PK       Fc   688.0 Hz  Gain  -2.90 dB  Q  1.000
+     * Filter  3: ON  PK       Fc    1066 Hz  Gain  -6.40 dB  Q  3.352
+     * Filter  4: ON  PK       Fc    2190 Hz  Gain  -5.60 dB  Q  2.037
+     * Filter  5: ON  PK       Fc    3792 Hz  Gain  -4.50 dB  Q  3.232
      */
-    f1.set_high_pass(500, rate, 0.710);
-    f2.set_peaking_band(1042, rate, -7.4, 1.798);
-    f3.set_peaking_band(2221, rate, -6.2, 3.140);
-    f4.set_low_pass(3000, rate, 1.0);
-    f5.set_peaking_band(3702, rate, -5.4, 3.108);
+    f1.set_high_pass(250, rate, 0.710);
+    f2.set_low_pass(3245, rate, 0.710);
+    f3.set_peaking_band(688, rate, -2.9, 1.000);
+    f4.set_peaking_band(1066, rate, -6.4, 3.352);
+    f5.set_peaking_band(2190, rate, -5.6, 2.037);
+    f6.set_peaking_band(3792, rate, -4.5, 3.232);
   }
 
   /**
@@ -193,6 +200,7 @@ class FilterState {
     sample = f3.process(sample);
     sample = f4.process(sample);
     sample = f5.process(sample);
+    sample = f6.process(sample);
     data[data_index] = sample;
     data_index = (data_index + 1) % data.size();
   }
@@ -222,7 +230,7 @@ class LCC : public PluginBase {
 
   bool phantom_center_only = false;
   float delay_us = 313;
-  float decay_db = -2;
+  float decay_db = -1;
 
  private:
   FilterState a;
