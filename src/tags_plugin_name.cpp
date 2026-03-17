@@ -40,6 +40,7 @@ Model::Model(QObject* parent)
                 {BaseName::expander, i18n("Expander")},
                 {BaseName::filter, i18n("Filter")},
                 {BaseName::gate, i18n("Gate")},
+                {BaseName::lcc, i18n("Crosstalk Canceller")},
                 {BaseName::levelMeter, i18n("Level Meter")},
                 {BaseName::limiter, i18n("Limiter")},
                 {BaseName::loudness, i18n("Loudness")},
